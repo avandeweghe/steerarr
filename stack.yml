@@ -1,0 +1,47 @@
+# Steerarr on Docker Swarm, as an example. See README.md, "Running on Docker Swarm".
+#
+#   docker stack deploy -c stack.yml steerarr
+#
+# Before deploying:
+#   - image: a registry your nodes can pull from (build and push it first).
+#   - volumes: a data folder on storage every node can reach, owned by uid 1000.
+#   - networks: the external network your reverse proxy is on. The proxy reaches Steerarr
+#     by service name, steerarr_steerarr:6232 when the stack is named "steerarr".
+# No port is published, so the only way in is through the proxy.
+
+services:
+  steerarr:
+    image: ghcr.io/<owner>/steerarr:latest
+    environment:
+      PORT: '6232'
+      LOG_LEVEL: info
+      # Requests arrive from the proxy over the overlay network (a private address).
+      TRUST_PROXY: loopback,linklocal,uniquelocal
+      DATA_DIR: /data
+    volumes:
+      # Service settings (including API keys) and the login.
+      - type: bind
+        source: /srv/steerarr
+        target: /data
+    networks:
+      - proxy
+    deploy:
+      replicas: 1
+      update_config:
+        # One instance at a time, since it owns the settings file.
+        order: stop-first
+        failure_action: rollback
+      rollback_config:
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+
+networks:
+  proxy:
+    external: true

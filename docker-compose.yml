@@ -1,0 +1,28 @@
+# Steerarr with Docker Compose.
+#
+#   docker compose up -d --build
+#
+# Then open http://<docker-host>:6232 and set up your services in the app. Settings are saved in
+# ./data. See README.md for configuration, security and running behind a reverse proxy.
+
+services:
+  steerarr:
+    build:
+      context: .
+      args:
+        # Shown under Settings > About; set it to enable the "new version" reload prompt:
+        #   STEERARR_COMMIT=$(git rev-parse HEAD) docker compose up -d --build
+        STEERARR_COMMIT: ${STEERARR_COMMIT:-}
+    # Or use a published image instead of building, e.g.:
+    # image: ghcr.io/<owner>/steerarr:latest
+    restart: unless-stopped
+    ports:
+      - '6232:6232'
+    environment:
+      LOG_LEVEL: info
+      # Set to your reverse proxy's address if it isn't on a private network.
+      TRUST_PROXY: loopback,linklocal,uniquelocal
+    volumes:
+      # Service settings (including API keys) and the login. The container runs as uid 1000,
+      # so this folder must be writable by it: mkdir -p data && sudo chown 1000:1000 data
+      - ./data:/data

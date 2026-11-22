@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0e1a24" />
+    <meta name="description" content="Control panel for my *arr media stack" />
+    <title>Steerarr</title>
+
+    <link rel="icon" href="./favicon.ico" sizes="48x48" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon-180x180.png" />
+    <!-- Send the login cookie when fetching the manifest, so a login proxy in front of Steerarr (e.g. authentik) doesn't block it. -->
+    <link rel="manifest" href="./manifest.webmanifest" crossorigin="use-credentials" />
+
+    <!-- iPhone home screen: full-screen app, content runs under the status bar. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Steerarr" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

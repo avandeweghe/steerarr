@@ -1,0 +1,103 @@
+# Checks every change, and publishes the image to ghcr.io/<owner>/<repo>:
+#   - push to main     -> :latest and :sha-<short sha>
+#   - tag v1.2.3       -> :1.2.3, :1.2 and :sha-<short sha>
+#   - pull request     -> checks and builds the image, pushes nothing
+#   - manual run       -> :sha-<short sha> (plus :latest when run on main)
+# After each publish, image versions beyond the newest 10 are deleted (see cleanup).
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # metadata-action lowercases it, as registries require.
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  check:
+    name: Format, types and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.1'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: npm run build
+
+  image:
+    name: Docker image
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image tags and labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+          labels: |
+            org.opencontainers.image.title=Steerarr
+            org.opencontainers.image.description=Personal control app for my *arr media stack
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: STEERARR_COMMIT=${{ github.sha }}
+          # One package version per image: a provenance attestation would add untagged
+          # versions that the cleanup below could separate from their image.
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Keeps GHCR storage from growing with every merge. Production runs :latest, which is always
+  # among the newest, and the rest are kept for rolling back. Deleted versions are gone for good.
+  cleanup:
+    name: Delete old image versions
+    needs: image
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: 10

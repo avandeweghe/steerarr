@@ -1,0 +1,75 @@
+# Development stack with hot reload for backend and frontend.
+#
+#   1. Optional: copy .env.example to .env to change defaults.
+#   2. docker compose -f docker-compose.dev.yml up
+#   3. Open http://localhost:5173 (or http://<docker host IP>:5173 from another device)
+#      and set up each service from the app.
+#
+# The source is mounted into the containers; node_modules live in named volumes so they
+# never mix with the host (and are fast on Docker Desktop for Windows). Settings saved in the
+# app live in the "data" volume. On Docker Desktop for Windows, set VITE_USE_POLLING=true in
+# .env so file changes are seen.
+
+name: steerarr-dev
+
+x-node: &node
+  image: node:26.13.1-alpine3.24
+  working_dir: /app
+  init: true
+  volumes:
+    - .:/app
+    - node_modules:/app/node_modules
+    - shared_node_modules:/app/shared/node_modules
+    - backend_node_modules:/app/backend/node_modules
+    - frontend_node_modules:/app/frontend/node_modules
+
+services:
+  # Installs dependencies once, before the dev servers start.
+  deps:
+    <<: *node
+    command: npm install --no-audit --no-fund
+
+  backend:
+    <<: *node
+    command: npm run dev -w @steerarr/backend
+    # YAML can't append to the shared list above, so it's repeated here plus the data volume.
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - shared_node_modules:/app/shared/node_modules
+      - backend_node_modules:/app/backend/node_modules
+      - frontend_node_modules:/app/frontend/node_modules
+      - data:/data
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: '6232'
+      DATA_DIR: /data
+    ports:
+      - '6232:6232'
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+
+  frontend:
+    <<: *node
+    command: npm run dev -w @steerarr/frontend
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:6232
+      VITE_USE_POLLING: ${VITE_USE_POLLING:-false}
+    ports:
+      - '5173:5173'
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
+
+volumes:
+  node_modules:
+  shared_node_modules:
+  backend_node_modules:
+  frontend_node_modules:
+  data:

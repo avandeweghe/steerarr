@@ -1,0 +1,16 @@
+{
+  "name": "@steerarr/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Types shared by backend and frontend. Types only: nothing here may exist at runtime.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

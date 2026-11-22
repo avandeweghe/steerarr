@@ -1,0 +1,243 @@
+/*
+  Steerarr theme: a ship's helm at night.
+  Status colours follow navigation lights: starboard green = good, port red = problem,
+  lantern amber = needs attention. Brass is the only accent.
+*/
+:root {
+  color-scheme: dark;
+
+  /* Palette */
+  --sea: #0e1a24; /* app background */
+  --hull: #15242f; /* raised surfaces: panels, tab bar */
+  --rigging: #24384a; /* hairlines and borders */
+  --rigging-strong: #3d566d; /* input borders: must stand out against --sea */
+  --sailcloth: #e6e1d3; /* primary text */
+  --fog: #8a9ba8; /* secondary text */
+  --brass: #c9a45c; /* accent: active tab, primary actions, focus */
+  --starboard: #3fb68b; /* ok, downloaded */
+  --port: #e0574f; /* error, missing */
+  --lantern: #f0a43a; /* warning */
+
+  /* Type: condensed instrument face for titles and numbers, the system face for reading. */
+  --font-display: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --size-title: 2rem; /* 32px large page title */
+  --size-heading: 1.375rem; /* 22px */
+  --size-body: 1.0625rem; /* 17px, iOS body */
+  --size-secondary: 0.9375rem; /* 15px */
+  --size-caption: 0.8125rem; /* 13px */
+
+  /* Layout */
+  --gutter: 1rem;
+  --content-width: 40rem;
+  --tap: 44px; /* minimum touch target */
+  --radius-panel: 14px;
+  --radius-control: 10px;
+  --tabbar-height: 3.25rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--sea);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--sea);
+  color: var(--sailcloth);
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* Shared building blocks used across service pages. */
+.panel {
+  background: var(--hull);
+  border: 1px solid var(--rigging);
+  border-radius: var(--radius-panel);
+  padding: var(--gutter);
+}
+
+.muted {
+  color: var(--fog);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--tap);
+  padding: 0 1.125rem;
+  border: 1px solid var(--rigging);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--sailcloth);
+  font-size: var(--size-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:active {
+  background: var(--rigging);
+}
+
+.button.primary {
+  border-color: var(--brass);
+  background: var(--brass);
+  color: var(--sea);
+}
+
+.button.primary:active {
+  background: color-mix(in srgb, var(--brass) 80%, var(--sea));
+}
+
+.button.danger {
+  border-color: var(--port);
+  color: var(--port);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Forms. Inputs use the 17px body size: below 16px iPhone Safari zooms in on focus. */
+.field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.field label {
+  font-size: var(--size-secondary);
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 0.875rem;
+  border: 1px solid var(--rigging-strong);
+  border-radius: var(--radius-control);
+  background: var(--sea);
+  color: var(--sailcloth);
+  font: inherit;
+  font-size: var(--size-body);
+}
+
+.field input::placeholder {
+  color: var(--fog);
+  opacity: 0.8;
+}
+
+.field input:focus {
+  border-color: var(--brass);
+  outline: none;
+}
+
+.field input:disabled,
+.field select:disabled {
+  opacity: 0.6;
+}
+
+/* Drawn chevron: Safari ignores most styling of selects unless appearance is none. */
+.field select {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 2.5rem 0 0.875rem;
+  border: 1px solid var(--rigging-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--sea);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--fog) 50%),
+    linear-gradient(135deg, var(--fog) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.25rem) 50%,
+    calc(100% - 0.875rem) 50%;
+  background-size: 0.375rem 0.375rem;
+  background-repeat: no-repeat;
+  color: var(--sailcloth);
+  font: inherit;
+  font-size: var(--size-body);
+  appearance: none;
+}
+
+.field select:focus {
+  border-color: var(--brass);
+  outline: none;
+}
+
+/* A checkbox with its label, as one 44 px touch target. */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--tap);
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--brass);
+}
+
+.hint {
+  color: var(--fog);
+  font-size: var(--size-caption);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
